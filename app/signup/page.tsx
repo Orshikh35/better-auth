@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { GithubIcon, GoogleIcon } from "../components/Icons";
 
 type Provider = "google" | "github";
 
@@ -57,63 +58,59 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-zinc-950 text-white">
+    <div className="min-h-screen w-full relative overflow-hidden bg-zinc-900 text-white">
       {/* Background */}
-      <div className="absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-blue-500/35 to-cyan-400/10 blur-3xl" />
-        <div className="absolute -bottom-48 -right-48 h-[620px] w-[620px] rounded-full bg-gradient-to-tr from-fuchsia-500/25 to-purple-500/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),rgba(0,0,0,0.25),rgba(0,0,0,0.85))]" />
-        <div className="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:56px_56px]" />
-      </div>
+ <div className="absolute inset-0 overflow-hidden">
+        {/* Glow blobs */}
+        <div
+          className="absolute -top-48 -left-48 h-[600px] w-[600px] rounded-full 
+    bg-gradient-to-br from-sky-400/50 via-blue-500/30 to-cyan-300/20 
+    blur-[120px]"
+        />
 
+        <div
+          className="absolute top-1/3 -right-48 h-[520px] w-[520px] rounded-full 
+    bg-gradient-to-tr from-fuchsia-500/45 via-purple-500/30 to-pink-400/20 
+    blur-[120px]"
+        />
+
+        <div
+          className="absolute bottom-[-200px] left-1/3 h-[520px] w-[520px] rounded-full 
+    bg-gradient-to-tr from-emerald-400/30 via-teal-400/20 to-cyan-300/10 
+    blur-[120px]"
+        />
+
+        {/* Aurora overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.12),rgba(0,0,0,0.25),rgba(0,0,0,0.9))]" />
+
+        {/* Soft color wash */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-black/60" />
+
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage: `
+        linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px)
+      `,
+            backgroundSize: "64px 64px",
+          }}
+        />
+      </div>
       <main className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
-              <span className="text-sm font-semibold">EDU</span>
-            </div>
+        
+          {/* Card */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
+            {/* Header */}
+
             <div className="text-center">
               <h1 className="text-lg font-semibold tracking-tight">
                 Create account
               </h1>
-              <p className="text-xs text-white/60">Join and start learning</p>
             </div>
-          </div>
-
-          {/* Card */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
-            {/* Social */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => signInSocial("google")}
-                disabled={pending !== null}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
-              >
-                <GoogleIcon className="h-4 w-4 opacity-90" />
-                <span className="font-medium">
-                  {pending === "google" ? "Connecting…" : "Google"}
-                </span>
-              </button>
-
-              <button
-                onClick={() => signInSocial("github")}
-                disabled={pending !== null}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
-              >
-                <GithubIcon className="h-4 w-4 opacity-90" />
-                <span className="font-medium">
-                  {pending === "github" ? "Connecting…" : "GitHub"}
-                </span>
-              </button>
-            </div>
-
-            <div className="my-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-[11px] text-white/50">or</span>
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
-
+           
             {/* Form */}
             <form onSubmit={onSubmit} className="space-y-4">
               <Field
@@ -207,6 +204,36 @@ export default function SignupPage() {
                 {pending === "signup" ? "Creating…" : "Create account"}
               </button>
             </form>
+             <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[11px] text-white/50">or</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+
+              {/* Social */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => signInSocial("google")}
+                disabled={pending !== null}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+              >
+                <GoogleIcon className="h-4 w-4 opacity-90" />
+                <span className="font-medium">
+                  {pending === "google" ? "Connecting…" : "Google"}
+                </span>
+              </button>
+
+              <button
+                onClick={() => signInSocial("github")}
+                disabled={pending !== null}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+              >
+                <GithubIcon className="h-4 w-4 opacity-90" />
+                <span className="font-medium">
+                  {pending === "github" ? "Connecting…" : "GitHub"}
+                </span>
+              </button>
+            </div>
 
             <p className="mt-5 text-center text-xs text-white/55">
               Already have an account?{" "}
@@ -264,24 +291,3 @@ function Field({
   );
 }
 
-function GoogleIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12 10.2v3.9h5.4c-.2 1.2-1.4 3.5-5.4 3.5A6.2 6.2 0 1 1 12 5.8c1.8 0 3 .8 3.7 1.5l2.5-2.4A9.8 9.8 0 1 0 12 21.8c5.7 0 9.4-4 9.4-9.6 0-.6-.1-1.1-.2-1.6H12Z"
-      />
-    </svg>
-  );
-}
-
-function GithubIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12 .8A11.6 11.6 0 0 0 8.3 23c.6.1.8-.3.8-.6v-2.2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.2 11.2 0 0 1 6 0C16.9 4 18 4.3 18 4.3c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.2 0 4.6-2.7 5.6-5.3 5.9.4.3.8 1 .8 2.1v3.1c0 .3.2.7.8.6A11.6 11.6 0 0 0 12 .8Z"
-      />
-    </svg>
-  );
-}
