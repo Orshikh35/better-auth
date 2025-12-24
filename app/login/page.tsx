@@ -28,7 +28,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
 
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
