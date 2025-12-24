@@ -3,13 +3,60 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { GithubIcon, GoogleIcon } from "../components/Icons";
+import { GithubIcon, GoogleIcon } from "../../components/Icons";
+import { z } from "zod";
+import { useRouter, useSearchParams } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 type Provider = "google" | "github";
+
+const signInSchema = z.object({
+  email: z.string().email({message: "Invalid email address"}),
+  password: z.string().min(8, {message: "Password must be at least 8 characters long"}),
+  rememberMe: z.boolean().optional(),
+});
+
+type SignInValues = z.infer<typeof signInSchema>;
 
 export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [pending, setPending] = useState<null | Provider | "email">(null);
+
+  const [error, setError] = useState<string | null>(null)
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const form = useForm<SignInValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
+
+  async function  onSubmit ({email, password, rememberMe}: SignInValues)  {
+    setError(null);
+    setPending("email");
+
+    const { error } = await authClient.signIn.email({
+      email,
+      password,
+      rememberMe,
+    });
+
+    if (error) {
+      setError(error.message || "An error occurred");
+    } else {
+      toast.success("Signed in successfully");
+      router.push("/dashboard");
+    }
+  };
+
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-zinc-900 text-white">
@@ -74,6 +121,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <label className="text-xs text-white/70">Email</label>
                 <input
+                  {...form.register("email")}
                   name="email"
                   type="email"
                   required
@@ -95,6 +143,7 @@ export default function LoginPage() {
                 </div>
 
                 <input
+                  {...form.register("password")}
                   name="password"
                   type={showPass ? "text" : "password"}
                   required
@@ -123,6 +172,9 @@ export default function LoginPage() {
                 type="submit"
                 disabled={pending !== null}
                 className="w-full rounded-2xl bg-white text-zinc-950 px-4 py-3 text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
+                onClick={form.handleSubmit(onSubmit, (errors) => {
+                  setError(errors.email?.message || errors.password?.message || "An error occurred");
+                })}
               >
                 {pending === "email" ? "Signing in…" : "Sign in"}
               </button>
@@ -179,4 +231,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

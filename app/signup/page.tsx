@@ -2,27 +2,71 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GithubIcon, GoogleIcon } from "../components/Icons";
+import { GithubIcon, GoogleIcon } from "../../components/Icons";
+import { z } from "zod";
+import { authClient } from "@/lib/auth-client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+/* =======================
+   TYPES & SCHEMA
+======================= */
 
 type Provider = "google" | "github";
+
+const signUpSchema = z
+  .object({
+    name: z.string().min(1, { message: "Name is required" }),
+    email: z.string().email({ message: "Invalid email address" }),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters long" }),
+    confirmPassword: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters long" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type SignUpValues = z.infer<typeof signUpSchema>;
+
+/* =======================
+   PAGE
+======================= */
 
 export default function SignupPage() {
   const [showPass, setShowPass] = useState(false);
   const [showPass2, setShowPass2] = useState(false);
   const [pending, setPending] = useState<null | Provider | "signup">(null);
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
+  const password = watch("password");
+  const confirmPassword = watch("confirmPassword");
+
   const passMismatch = useMemo(() => {
-    if (!form.password || !form.confirmPassword) return false;
-    return form.password !== form.confirmPassword;
-  }, [form.password, form.confirmPassword]);
+    if (!password || !confirmPassword) return false;
+    return password !== confirmPassword;
+  }, [password, confirmPassword]);
 
   async function signInSocial(provider: Provider) {
     try {
@@ -33,104 +77,89 @@ export default function SignupPage() {
     }
   }
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function onSubmit(data: SignUpValues) {
+    setError(null);
+    setPending("signup");
 
-    if (passMismatch) return;
+    const { error } = await authClient.signUp.email({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      callbackURL: "/dashboard",
+    });
 
-    try {
-      setPending("signup");
-
-      // TODO: энд өөрийн signup API-гаа холбоно
-      // await fetch("/api/auth/signup", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     name: form.name,
-      //     email: form.email,
-      //     phone: form.phone,
-      //     password: form.password,
-      //   }),
-      // });
-    } finally {
-      setPending(null);
+    if (error) {
+      setError(error.message || "An error occurred");
+    } else {
+      toast.success("Account created successfully");
+      router.push("/email-verified");
     }
+
+    setPending(null);
   }
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-zinc-900 text-white">
-      {/* Background */}
- <div className="absolute inset-0 overflow-hidden">
-        {/* Glow blobs */}
-        <div
-          className="absolute -top-48 -left-48 h-[600px] w-[600px] rounded-full 
-    bg-gradient-to-br from-sky-400/50 via-blue-500/30 to-cyan-300/20 
-    blur-[120px]"
-        />
-
-        <div
-          className="absolute top-1/3 -right-48 h-[520px] w-[520px] rounded-full 
-    bg-gradient-to-tr from-fuchsia-500/45 via-purple-500/30 to-pink-400/20 
-    blur-[120px]"
-        />
-
-        <div
-          className="absolute bottom-[-200px] left-1/3 h-[520px] w-[520px] rounded-full 
-    bg-gradient-to-tr from-emerald-400/30 via-teal-400/20 to-cyan-300/10 
-    blur-[120px]"
-        />
-
-        {/* Aurora overlay */}
+      {/* BACKGROUND */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-48 -left-48 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-sky-400/50 via-blue-500/30 to-cyan-300/20 blur-[120px]" />
+        <div className="absolute top-1/3 -right-48 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-fuchsia-500/45 via-purple-500/30 to-pink-400/20 blur-[120px]" />
+        <div className="absolute bottom-[-200px] left-1/3 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-emerald-400/30 via-teal-400/20 to-cyan-300/10 blur-[120px]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.12),rgba(0,0,0,0.25),rgba(0,0,0,0.9))]" />
-
-        {/* Soft color wash */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-black/60" />
-
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.12]"
           style={{
             backgroundImage: `
-        linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px)
-      `,
+              linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px)
+            `,
             backgroundSize: "64px 64px",
           }}
         />
       </div>
+
       <main className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-        
-          {/* Card */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
-            {/* Header */}
-
             <div className="text-center">
               <h1 className="text-lg font-semibold tracking-tight">
                 Create account
               </h1>
             </div>
-           
-            {/* Form */}
-            <form onSubmit={onSubmit} className="space-y-4">
+
+            {error && (
+              <p className="mt-3 text-center text-xs text-red-300">
+                {error}
+              </p>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
               <Field
                 label="Full name"
-                value={form.name}
-                onChange={(v) => setForm((p) => ({ ...p, name: v }))}
-                placeholder="Your name"
                 type="text"
-                name="name"
+                placeholder="Your name"
+                {...register("name")}
               />
+              {errors.name && (
+                <p className="text-[11px] text-red-300">
+                  {errors.name.message}
+                </p>
+              )}
 
               <Field
                 label="Email"
-                value={form.email}
-                onChange={(v) => setForm((p) => ({ ...p, email: v }))}
-                placeholder="you@example.com"
                 type="email"
-                name="email"
+                placeholder="you@example.com"
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-[11px] text-red-300">
+                  {errors.email.message}
+                </p>
+              )}
 
+              {/* PASSWORD */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs text-white/70">Password</label>
@@ -143,21 +172,14 @@ export default function SignupPage() {
                   </button>
                 </div>
                 <input
-                  name="password"
-                  required
                   type={showPass ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, password: e.target.value }))
-                  }
                   placeholder="••••••••"
-                  className={[
-                    "w-full rounded-2xl border bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:bg-white/10",
-                    "border-white/10 focus:border-white/20",
-                  ].join(" ")}
+                  {...register("password")}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-white/20 focus:bg-white/10"
                 />
               </div>
 
+              {/* CONFIRM */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs text-white/70">
@@ -171,16 +193,10 @@ export default function SignupPage() {
                     {showPass2 ? "Hide" : "Show"}
                   </button>
                 </div>
-
                 <input
-                  name="confirmPassword"
-                  required
                   type={showPass2 ? "text" : "password"}
-                  value={form.confirmPassword}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, confirmPassword: e.target.value }))
-                  }
                   placeholder="••••••••"
+                  {...register("confirmPassword")}
                   className={[
                     "w-full rounded-2xl border bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:bg-white/10",
                     passMismatch
@@ -188,7 +204,6 @@ export default function SignupPage() {
                       : "border-white/10 focus:border-white/20",
                   ].join(" ")}
                 />
-
                 {passMismatch && (
                   <p className="text-[11px] text-red-200/80">
                     Passwords do not match.
@@ -204,34 +219,30 @@ export default function SignupPage() {
                 {pending === "signup" ? "Creating…" : "Create account"}
               </button>
             </form>
-             <div className="my-5 flex items-center gap-3">
+
+            <div className="my-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-white/10" />
               <span className="text-[11px] text-white/50">or</span>
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
-              {/* Social */}
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => signInSocial("google")}
                 disabled={pending !== null}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 hover:bg-white/10 disabled:opacity-50"
               >
                 <GoogleIcon className="h-4 w-4 opacity-90" />
-                <span className="font-medium">
-                  {pending === "google" ? "Connecting…" : "Google"}
-                </span>
+                {pending === "google" ? "Connecting…" : "Google"}
               </button>
 
               <button
                 onClick={() => signInSocial("github")}
                 disabled={pending !== null}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 hover:bg-white/10 disabled:opacity-50"
               >
                 <GithubIcon className="h-4 w-4 opacity-90" />
-                <span className="font-medium">
-                  {pending === "github" ? "Connecting…" : "GitHub"}
-                </span>
+                {pending === "github" ? "Connecting…" : "GitHub"}
               </button>
             </div>
 
@@ -242,52 +253,35 @@ export default function SignupPage() {
               </Link>
             </p>
           </div>
-
-          <p className="mt-6 text-center text-[11px] text-white/40">
-            By creating an account, you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-4">
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="underline underline-offset-4">
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </div>
       </main>
     </div>
   );
 }
 
+/* =======================
+   FIELD COMPONENT
+======================= */
+
 function Field({
   label,
-  name,
   type,
-  value,
   placeholder,
-  onChange,
+  ...props
 }: {
   label: string;
-  name: string;
   type: string;
-  value: string;
   placeholder?: string;
-  onChange: (value: string) => void;
-}) {
+} & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="space-y-2">
       <label className="text-xs text-white/70">{label}</label>
       <input
-        name={name}
         type={type}
-        required
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-white/20 focus:bg-white/10"
+        {...props}
       />
     </div>
   );
 }
-
