@@ -1,10 +1,13 @@
-import React from 'react'
-import LoginPage from './login/page'
+import AuthButtons from "../components/AuthButtons";
+import LoginPage from "./login/page";
 
-function page() {
+
+export default function Home() {
   return (
-    <div><LoginPage/></div>
-  )
+    <main>
+      {/* <h1>OAuth 2.0 Mini Web</h1>
+      <AuthButtons /> */}
+      <LoginPage />
+    </main>
+  );
 }
-
-export default page

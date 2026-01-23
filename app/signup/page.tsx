@@ -11,9 +11,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-/* =======================
-   TYPES & SCHEMA
-======================= */
 
 type Provider = "google" | "github";
 
@@ -35,9 +32,6 @@ const signUpSchema = z
 
 type SignUpValues = z.infer<typeof signUpSchema>;
 
-/* =======================
-   PAGE
-======================= */
 
 export default function SignupPage() {
   const [showPass, setShowPass] = useState(false);
@@ -77,22 +71,22 @@ export default function SignupPage() {
     }
   }
 
-  async function onSubmit(data: SignUpValues) {
+  async function onSubmit({email, password, name}: SignUpValues) {
     setError(null);
     setPending("signup");
 
     const { error } = await authClient.signUp.email({
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      callbackURL: "/dashboard",
+      email,
+      password,
+      name,
+      callbackURL: "/email-verified",
     });
 
     if (error) {
       setError(error.message || "An error occurred");
     } else {
       toast.success("Account created successfully");
-      router.push("/email-verified");
+      router.push("/admin");
     }
 
     setPending(null);
